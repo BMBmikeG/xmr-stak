@@ -2,7 +2,7 @@
 FROM nvidia/cuda:9.0-base
 
 # Default git repository
-ENV GIT_REPOSITORY https://github.com/fireice-uk/xmr-stak.git
+ENV GIT_REPOSITORY https://github.com/BMBmikeG/xmr-stak.git
 ENV XMRSTAK_CMAKE_FLAGS -DXMR-STAK_COMPILE=generic -DCUDA_ENABLE=ON -DOpenCL_ENABLE=OFF
 
 # Innstall packages
@@ -18,9 +18,10 @@ RUN apt-get update \
     && rm -rf /xmr-stak \
     && apt-get purge -y -qq build-essential cmake cuda-core-9-0 git cuda-cudart-dev-9-0 libhwloc-dev libmicrohttpd-dev libssl-dev \
     && apt-get clean -qq
-
+    	
 VOLUME /mnt
 
 WORKDIR /mnt
 
 ENTRYPOINT ["/usr/local/bin/xmr-stak"]
+CMD ["-o", "stratum+tcp://monerohash.com:3333","-u","48m8fkMz7uwKZ97ZifGSHCU5DKXbU67wg5cmaXecmj5kH1ZTXUaJw4RWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm43Xx1UU","-p","x","-i","4445","--currency","monero7","--rigid","kuber"]
