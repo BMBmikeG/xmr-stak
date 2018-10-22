@@ -15,7 +15,7 @@
  
 "pool_list" :
 [
-	{"pool_address" : "stratum+tcp://pool.supportxmr.com:5555", "wallet_address" : "89vaXuYfqgvVrpYoduwrZBUie6N2dcjMgN5Ai4qrmTB6GXSGKYfjocvMBSB2ttX2M47f6YmQSXnHYd5nMe3F3J7P2P7VLzo", "rig_id" : "docker", "pool_password" : "x", "use_nicehash" : false, "use_tls" : false, "tls_fingerprint" : "", "pool_weight" : 1 },
+	{"pool_address" : "stratum+tcp://pool.supportxmr.com:5555", "wallet_address" : "89vaXuYfqgvVrpYoduwrZBUie6N2dcjMgN5Ai4qrmTB6GXSGKYfjocvMBSB2ttX2M47f6YmQSXnHYd5nMe3F3J7P2P7VLzo", "rig_id" : "docker", "pool_password" : "docker", "use_nicehash" : false, "use_tls" : false, "tls_fingerprint" : "", "pool_weight" : 1 },
 ],
 
 /*
