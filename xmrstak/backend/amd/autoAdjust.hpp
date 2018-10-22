@@ -31,7 +31,7 @@ namespace amd
 {
 
 class autoAdjust
-{    
+{
 public:
 
 	autoAdjust()
@@ -83,11 +83,15 @@ private:
 
 		constexpr size_t byteToMiB = 1024u * 1024u;
 
-		size_t hashMemSize = cn_select_memory(::jconf::inst()->GetMiningAlgo());
+		size_t hashMemSize = std::max(
+			cn_select_memory(::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo()),
+			cn_select_memory(::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgoRoot())
+		);
 
 		std::string conf;
 		for(auto& ctx : devVec)
 		{
+			size_t minFreeMem = 128u * byteToMiB;
 			/* 1000 is a magic selected limit, the reason is that more than 2GiB memory
 			 * sowing down the memory performance because of TLB cache misses
 			 */
@@ -109,12 +113,44 @@ private:
 				 */
 				maxThreads = 2024u;
 			}
+
+			// NVIDIA optimizations
+			if(
+				ctx.isNVIDIA && (
+					ctx.name.find("P100") != std::string::npos ||
+				    ctx.name.find("V100") != std::string::npos
+				)
+			)
+			{
+				// do not limit the number of threads
+				maxThreads = 40000u;
+				minFreeMem = 512u * byteToMiB;
+			}
+
+			// check if cryptonight_monero_v8 is selected for the user or dev pool
+			bool useCryptonight_v8 =
+				::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_monero_v8 ||
+				::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgoRoot() == cryptonight_monero_v8 ||
+				::jconf::inst()->GetCurrentCoinSelection().GetDescription(0).GetMiningAlgo() == cryptonight_monero_v8 ||
+				::jconf::inst()->GetCurrentCoinSelection().GetDescription(0).GetMiningAlgoRoot() == cryptonight_monero_v8;
+
+			// set strided index to default
+			ctx.stridedIndex = 1;
+
+			// nvidia performance is very bad if the scratchpad is not contiguous
+			if(ctx.isNVIDIA)
+				ctx.stridedIndex = 0;
+
+			// use chunked (4x16byte) scratchpad for all backends. Default `mem_chunk` is `2`
+			if(useCryptonight_v8)
+				ctx.stridedIndex = 2;
+
 			// increase all intensity limits by two for aeon
-			if(::jconf::inst()->GetMiningAlgo() == cryptonight_lite)
+			if(::jconf::inst()->GetCurrentCoinSelection().GetDescription(1).GetMiningAlgo() == cryptonight_lite)
 				maxThreads *= 2u;
 
 			// keep 128MiB memory free (value is randomly chosen)
-			size_t availableMem = ctx.freeMem - (128u * byteToMiB);
+			size_t availableMem = ctx.freeMem - minFreeMem;
 			// 224byte extra memory is used per thread for meta data
 			size_t perThread = hashMemSize + 224u;
 			size_t maxIntensity = availableMem / perThread;
@@ -135,8 +171,8 @@ private:
 				// set 8 threads per block (this is a good value for the most gpus)
 				conf += std::string("  { \"index\" : ") + std::to_string(ctx.deviceIdx) + ",\n" +
 					"    \"intensity\" : " + std::to_string(intensity) + ", \"worksize\" : " + std::to_string(8) + ",\n" +
-					"    \"affine_to_cpu\" : false, \"strided_index\" : 1, \"mem_chunk\" : 2,\n"
-					"    \"comp_mode\" : true\n" +
+					"    \"affine_to_cpu\" : false, \"strided_index\" : " + std::to_string(ctx.stridedIndex) + ", \"mem_chunk\" : 2,\n"
+					"    \"unroll\" : 8, \"comp_mode\" : true\n" +
 					"  },\n";
 			}
 			else
@@ -148,11 +184,13 @@ private:
 		configTpl.replace("PLATFORMINDEX",std::to_string(platformIndex));
 		configTpl.replace("GPUCONFIG",conf);
 		configTpl.write(params::inst().configFileAMD);
-		printer::inst()->print_msg(L0, "AMD: GPU configuration stored in file '%s'", params::inst().configFileAMD.c_str());
+
+		const std::string backendName = xmrstak::params::inst().openCLVendor;
+		printer::inst()->print_msg(L0, "%s: GPU (OpenCL) configuration stored in file '%s'", backendName.c_str(), params::inst().configFileAMD.c_str());
 	}
 
 	std::vector<GpuContext> devVec;
 };
 
 } // namespace amd
-} // namepsace xmrstak
+} // namespace xmrstak
